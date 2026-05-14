@@ -319,7 +319,7 @@ WORLD_HEIGHT/2
 
 ctx.save();
 
-ctx.translate(center.x,center.y);
+ctx.translate(1920/2, 1080/2);
 
 ctx.rotate(spinnerAngle);
 

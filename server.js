@@ -499,22 +499,38 @@ ctx.fillRect(0,y,W,80);
 }
 }
 
-function render(){
+function render() {
+  ctx.clearRect(0,0,W,H);
 
-ctx.clearRect(0,0,W,H);
+  // ===== WORLD SIZE =====
+  const WORLD_W = 1920;
+  const WORLD_H = 1080;
 
-drawIceSheen();
+  // scale arena to fit screen
+  const scale = Math.min(W / WORLD_W, H / WORLD_H);
 
-drawWalls();
+  // center arena
+  const offsetX = (W - WORLD_W * scale) / 2;
+  const offsetY = (H - WORLD_H * scale) / 2;
 
-drawSpikes();
+  ctx.save();
 
-drawSpinner();
+  ctx.translate(offsetX, offsetY);
+  ctx.scale(scale, scale);
 
-drawPlayers();
+  // ===== BACKGROUND =====
+  ctx.fillStyle = "#e9f5ff";
+  ctx.fillRect(0, 0, WORLD_W, WORLD_H);
 
-requestAnimationFrame(render);
+  // ===== SPINNER =====
+  drawSpinner();
 
+  // ===== PLAYERS =====
+  drawPlayers();
+
+  ctx.restore();
+
+  requestAnimationFrame(render);
 }
 
 render();

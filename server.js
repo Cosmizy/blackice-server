@@ -46,12 +46,27 @@ const ATTACK_ACTIVE = 0.16;
 const KNOCKBACK = 1600;
 
 const COLORS = [
-  "#111111",
-  "#ff4444",
-  "#4488ff",
-  "#44cc44",
-  "#ffcc00",
-  "#aa44ff"
+  "#111111", // black
+  "#ff4444", // red
+  "#4488ff", // blue
+  "#44cc44", // green
+  "#ffcc00", // yellow
+  "#aa44ff", // purple
+  "#00ccff", // cyan
+  "#cc00ff", // magenta
+  "#ff00cc", // pink
+
+  // added extras
+  "#ff7f50", // coral
+  "#ff8c00", // dark orange
+  "#1e90ff", // dodger blue
+  "#32cd32", // lime green
+  "#ffd700", // gold (brighter alternative yellow)
+  "#8a2be2", // blue violet
+  "#00fa9a", // medium spring green
+  "#ff6347", // tomato
+  "#20b2aa", // light sea green
+  "#f08080", // light coral
 ];
 
 const spikes = [];

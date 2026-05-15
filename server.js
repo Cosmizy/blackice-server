@@ -414,10 +414,10 @@ function handleInput(p, dt) {
 
   let moved = false;
 
-  if (input.left) p.ax -= cfg.ACCEL;
-  if (input.right) p.ax += cfg.ACCEL;
-  if (input.up) p.ay -= cfg.ACCEL;
-  if (input.down) p.ay += cfg.ACCEL;
+  if (input.left)  p.ax -= room.config.ACCEL;
+  if (input.right) p.ax += room.config.ACCEL;
+  if (input.up)    p.ay -= room.config.ACCEL;
+  if (input.down)  p.ay += room.config.ACCEL;
 
   if (moved) {
     p.facing = Math.atan2(p.ay, p.ax);

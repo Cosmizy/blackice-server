@@ -352,8 +352,8 @@ function updateRooms() {
         p.vy *= scale;
       }
 
-      p.vx *= FRICTION;
-      p.vy *= FRICTION;
+      p.vx *= room.config.FRICTION;
+      p.vy *= room.config.FRICTION;
 
       p.x += p.vx * dt;
       p.y += p.vy * dt;

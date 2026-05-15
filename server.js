@@ -206,6 +206,7 @@ io.on("connection", socket => {
 
   room.players[socket.id] = {
     id: socket.id,
+    roomName: roomName,
     x: Math.random() * 1200 + 300,
     y: Math.random() * 600 + 200,
     vx: 0,

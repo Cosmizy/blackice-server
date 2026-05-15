@@ -74,9 +74,9 @@ const spikes = [];
 regenSpikes();
 
 const rooms = {
-  room1: createRoom(),
-  room2: createRoom(),
-  room3: createRoom()
+  room1: createRoom("room1"),
+  room2: createRoom("room2"),
+  room3: createRoom("room3")
 };
 
 function pickUniqueColor(room) {

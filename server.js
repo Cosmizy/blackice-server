@@ -138,63 +138,51 @@ io.on("connection", socket => {
   socket.room = null;
 
   socket.on("joinRoom", roomName => {
-
   const now = Date.now();
 
-    // cooldown check
-    if (now - socket.lastJoinTime < JOIN_COOLDOWN) {
-      return; // silently ignore spam
-    }
-    
-    const room = rooms[roomName];
+  // cooldown check
+  if (now - socket.lastJoinTime < JOIN_COOLDOWN) {
+    return; // silently ignore spam
+  }
 
-    if (!room) return;
-    socket.lastJoinTime = now;
+  socket.lastJoinTime = now;
 
-    const count = Object.keys(room.players).length;
+  const room = rooms[roomName];
+  if (!room) return;
 
-    if (count >= MAX_PLAYERS) {
-      socket.emit("roomFull");
-      return;
-    }
+  const count = Object.keys(room.players).length;
 
-    if (socket.room) {
-      leaveRoom(socket);
-    }
+  if (count >= MAX_PLAYERS) {
+    socket.emit("roomFull");
+    return;
+  }
 
-    socket.join(roomName);
+  if (socket.room) {
+    leaveRoom(socket);
+  }
 
-    socket.room = roomName;
+  socket.join(roomName);
+  socket.room = roomName;
 
-    room.players[socket.id] = {
-      id: socket.id,
-
-      x: Math.random() * 1200 + 300,
-      y: Math.random() * 600 + 200,
-
-      vx: 0,
-      vy: 0,
-
-      ax: 0,
-      ay: 0,
-
-      facing: 0,
-
-      size: PLAYER_SIZE,
-
-      attackTimer: 0,
-      attackActiveTimer: 0,
-
-      alive: true,
-      respawnTimer: 0,
-
-      score: 0,
-
-      input: {},
-
-      color: COLORS[count % COLORS.length]
-    };
-  });
+  room.players[socket.id] = {
+    id: socket.id,
+    x: Math.random() * 1200 + 300,
+    y: Math.random() * 600 + 200,
+    vx: 0,
+    vy: 0,
+    ax: 0,
+    ay: 0,
+    facing: 0,
+    size: PLAYER_SIZE,
+    attackTimer: 0,
+    attackActiveTimer: 0,
+    alive: true,
+    respawnTimer: 0,
+    score: 0,
+    input: {},
+    color: COLORS[count % COLORS.length]
+  };
+});
 
   socket.on("input", input => {
 

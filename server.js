@@ -146,10 +146,12 @@ function pickUniqueColor(room) {
   return available[Math.floor(Math.random() * available.length)];
 }
 
-function createRoom() {
+function createRoom(name) {
   return {
+    name,
     players: {},
-    spinnerAngle: 0
+    spinnerAngle: 0,
+    config: ROOM_CONFIGS[name]
   };
 }
 

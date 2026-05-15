@@ -32,18 +32,18 @@ const SPINNER_SPIKE_WIDTH = 28;
 
 const SPIN_SPEED = 1.7;
 
-const ACCEL = 2200;
-const MAX_SPEED = 900;
-const FRICTION = 0.5;
+const ACCEL = 1400;
+const MAX_SPEED = 1400;
+const FRICTION = 0.99;
 
 const PLAYER_SIZE = 28;
 
-const ATTACK_RANGE = 54;
-const ATTACK_ARC = Math.PI / 2.2;
-const ATTACK_COOLDOWN = 0.45;
-const ATTACK_ACTIVE = 0.14;
+const ATTACK_RANGE = 70;
+const ATTACK_ARC = Math.PI / 1.8;
+const ATTACK_COOLDOWN = 0.38;
+const ATTACK_ACTIVE = 0.16;
 
-const KNOCKBACK = 520;
+const KNOCKBACK = 1600;
 
 const COLORS = [
   "#111111",

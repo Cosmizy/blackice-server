@@ -528,7 +528,7 @@ function resolveAttacks(players) {
 
       const dist = Math.hypot(dx, dy);
 
-      if (dist > ATTACK_RANGE + defender.size * 0.6) continue;
+      if (dist > room.config.ATTACK_RANGE + defender.size * 0.6) continue;
 
       const ang = Math.atan2(dy, dx);
 

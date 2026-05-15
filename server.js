@@ -609,14 +609,15 @@ function spikesKill(p) {
   return false;
 }
 
-function spinnerKills(p, spin){
-
+function spinnerKills(p, spin, room){
+  const cfg = room.config;
+  
   const dx = p.x - WORLD_WIDTH / 2;
   const dy = p.y - WORLD_HEIGHT / 2;
 
   const worldAngle = Math.atan2(dy, dx);
 
-  const seg = (Math.PI * 2) / room.config.CENTER_SPINNER_ARMS;
+  const seg = (Math.PI * 2) / cfg.CENTER_SPINNER_ARMS;
 
   const armIndex = Math.round((worldAngle - spin) / seg);
 
@@ -628,11 +629,11 @@ function spinnerKills(p, spin){
   const localX = dx * ca - dy * sa;
   const localY = dx * sa + dy * ca;
 
-  const baseStart = room.config.CENTER_SPINNER_OUTER - room.config.SPINNER_SPIKE_WIDTH;
-  const baseEnd = room.config.CENTER_SPINNER_OUTER;
+  const baseStart = cfg.CENTER_SPINNER_OUTER - cfg.SPINNER_SPIKE_WIDTH;
+  const baseEnd = cfg.CENTER_SPINNER_OUTER;
 
   const tipX = (baseStart + baseEnd) / 2;
-  const tipY = CENTER_BLADE_HALF + room.config.SPINNER_SPIKE_LENGTH;
+  const tipY = cfg.CENTER_BLADE_HALF + cfg.SPINNER_SPIKE_LENGTH;
 
   const r = p.size * 0.45;
 

@@ -320,7 +320,7 @@ function updateRooms() {
 
     const room = rooms[roomName];
 
-    room.spinnerAngle += SPIN_SPEED * dt;
+    room.spinnerAngle += room.config.SPIN_SPEED * dt;
 
     const playerList = Object.values(room.players).filter(Boolean);
 

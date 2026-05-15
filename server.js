@@ -370,13 +370,13 @@ function updateRooms() {
       }
     }
 
-    resolveAttacks(playerList);
+    resolveAttacks(playerList, room);
 
     for (const p of playerList) {
 
       if (!p.alive) continue;
 
-      if (spikesKill(p) || spinnerKills(p, room.spinnerAngle)) {
+      if (spikesKill(p) || spinnerKills(p, room.spinnerAngle, room)) {
         killPlayer(p);
       }
     }

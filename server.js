@@ -337,6 +337,7 @@ function updateRooms() {
 
 io.to(roomName).emit("state", {
   spinnerAngle: room.spinnerAngle,
+  spinnerArms: room.spinnerArms,
   players: Object.fromEntries(
     Object.entries(room.players).map(([id, p]) => [
       id,

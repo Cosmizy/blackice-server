@@ -326,10 +326,26 @@ function updateRooms() {
       }
     }
 
-    io.to(roomName).emit("state", {
-      players: room.players,
-      spinnerAngle: room.spinnerAngle
-    });
+io.to(roomName).emit("state", {
+  spinnerAngle: room.spinnerAngle,
+  players: Object.fromEntries(
+    Object.entries(room.players).map(([id, p]) => [
+      id,
+      {
+        id: p.id,
+        x: p.x,
+        y: p.y,
+        vx: p.vx,
+        vy: p.vy,
+        facing: p.facing,
+        size: p.size,
+        color: p.color,
+        alive: p.alive,
+        attackActiveTimer: p.attackActiveTimer
+      }
+    ])
+  )
+});
   }
 }
 

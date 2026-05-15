@@ -408,31 +408,17 @@ function handleInput(p, dt) {
   if (!p || !p.alive) return;
 
   const input = p.input || {};
+  const cfg = rooms[p.roomName].config;
 
   p.ax = 0;
   p.ay = 0;
 
   let moved = false;
 
-  if (input.left) {
-    p.ax -= ACCEL;
-    moved = true;
-  }
-
-  if (input.right) {
-    p.ax += ACCEL;
-    moved = true;
-  }
-
-  if (input.up) {
-    p.ay -= ACCEL;
-    moved = true;
-  }
-
-  if (input.down) {
-    p.ay += ACCEL;
-    moved = true;
-  }
+  if (input.left) p.ax -= cfg.ACCEL;
+  if (input.right) p.ax += cfg.ACCEL;
+  if (input.up) p.ay -= cfg.ACCEL;
+  if (input.down) p.ay += cfg.ACCEL;
 
   if (moved) {
     p.facing = Math.atan2(p.ay, p.ax);

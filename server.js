@@ -34,7 +34,7 @@ const SPIN_SPEED = 1.7;
 
 const ACCEL = 2200;
 const MAX_SPEED = 900;
-const FRICTION = 0.92;
+const FRICTION = 0.5;
 
 const PLAYER_SIZE = 28;
 

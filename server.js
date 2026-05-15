@@ -139,9 +139,17 @@ io.on("connection", socket => {
 
   socket.on("joinRoom", roomName => {
 
+  const now = Date.now();
+
+    // cooldown check
+    if (now - socket.lastJoinTime < JOIN_COOLDOWN) {
+      return; // silently ignore spam
+    }
+    
     const room = rooms[roomName];
 
     if (!room) return;
+    socket.lastJoinTime = now;
 
     const count = Object.keys(room.players).length;
 

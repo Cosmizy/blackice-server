@@ -245,7 +245,7 @@ io.on("connection", socket => {
 
   const count = Object.keys(room.players).length;
 
-  if (count >= MAX_PLAYERS) {
+  if (count >= room.config.MAX_PLAYERS) {
     socket.emit("roomFull");
     return;
   }

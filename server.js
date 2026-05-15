@@ -563,14 +563,14 @@ function spikesKill(p) {
   return false;
 }
 
-function spinnerKills(p, spin){
+function spinnerKills(p, spin, arms){
 
   const dx = p.x - WORLD_WIDTH / 2;
   const dy = p.y - WORLD_HEIGHT / 2;
 
   const worldAngle = Math.atan2(dy, dx);
 
-  const seg = (Math.PI * 2) / room.spinnerArms;
+  const seg = (Math.PI * 2) / arms;
 
   const armIndex = Math.round((worldAngle - spin) / seg);
 

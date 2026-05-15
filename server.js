@@ -351,6 +351,7 @@ io.to(roomName).emit("state", {
 }
 
 function handleInput(p, dt) {
+  if (!p || !p.alive) return;
 
   const input = p.input || {};
 

@@ -524,8 +524,8 @@ function resolvePlayerCollision(p1, p2) {
   }
 }
 
-function resolveAttacks(players) {
-
+function resolveAttacks(players, room) {
+  const cfg = room.config;
   for (const attacker of players) {
 
     if (!attacker.alive) continue;
@@ -543,7 +543,7 @@ function resolveAttacks(players) {
 
       const dist = Math.hypot(dx, dy);
 
-      if (dist > room.config.ATTACK_RANGE + defender.size * 0.6) continue;
+      if (dist > cfg.ATTACK_RANGE + defender.size * 0.6) continue;
 
       const ang = Math.atan2(dy, dx);
 

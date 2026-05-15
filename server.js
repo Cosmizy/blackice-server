@@ -605,7 +605,7 @@ function respawnPlayer(p) {
   if (!p) return; // 🔥 critical safety
 
   p.alive = true;
-  p.color = pickUniqueColor(rooms[p.roomName]);
+  // p.color = pickUniqueColor(rooms[p.roomName]);
   p.respawnTimer = 0;
 
   p.vx = 0;

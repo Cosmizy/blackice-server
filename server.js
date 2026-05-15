@@ -212,7 +212,7 @@ io.on("connection", socket => {
     respawnTimer: 0,
     score: 0,
     input: {},
-    color: COLORS[count % COLORS.length]
+    color: pickUniqueColor(room)
   };
 });
 

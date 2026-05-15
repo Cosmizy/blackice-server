@@ -586,6 +586,7 @@ function respawnPlayer(p){
 
   p.vx = 0;
   p.vy = 0;
+  p.color = pickUniqueColor(rooms[p.roomName]);
 }
 
 setInterval(updateRooms, 1000 / 60);

@@ -36,11 +36,11 @@ const ACCEL = 1000;
 const MAX_SPEED = 900;
 const FRICTION = 0.99;
 
-const PLAYER_SIZE = 35;
+const PLAYER_SIZE = 40;
 
 const ATTACK_RANGE = 80;
 const ATTACK_ARC = Math.PI / 1.8;
-const ATTACK_COOLDOWN = 0.38;
+const ATTACK_COOLDOWN = 0.45;
 const ATTACK_ACTIVE = 0.16;
 
 const KNOCKBACK = 1600;

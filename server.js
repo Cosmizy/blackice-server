@@ -404,28 +404,43 @@ io.to(roomName).emit("state", {
   }
 }
 
-function handleInput(p, dt) {
+function handleInput(p, dt, room) {
   if (!p || !p.alive) return;
 
   const input = p.input || {};
-  const cfg = rooms[p.roomName].config;
+  const cfg = room.config;
 
   p.ax = 0;
   p.ay = 0;
 
   let moved = false;
 
-  if (input.left)  p.ax -= room.config.ACCEL;
-  if (input.right) p.ax += room.config.ACCEL;
-  if (input.up)    p.ay -= room.config.ACCEL;
-  if (input.down)  p.ay += room.config.ACCEL;
+  if (input.left) {
+    p.ax -= cfg.ACCEL;
+    moved = true;
+  }
+
+  if (input.right) {
+    p.ax += cfg.ACCEL;
+    moved = true;
+  }
+
+  if (input.up) {
+    p.ay -= cfg.ACCEL;
+    moved = true;
+  }
+
+  if (input.down) {
+    p.ay += cfg.ACCEL;
+    moved = true;
+  }
 
   if (moved) {
     p.facing = Math.atan2(p.ay, p.ax);
   }
 
   if (input.attack && p.attackTimer <= 0) {
-    p.attackTimer = room.config.ATTACK_COOLDOWN;
+    p.attackTimer = cfg.ATTACK_COOLDOWN;
     p.attackActiveTimer = ATTACK_ACTIVE;
   }
 }

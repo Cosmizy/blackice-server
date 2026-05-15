@@ -391,6 +391,7 @@ function handleInput(p, dt) {
 }
 
 function keepInside(p) {
+  if (!p) return;
 
   const half = p.size / 2;
 
@@ -422,7 +423,7 @@ function keepInside(p) {
 }
 
 function resolvePlayerCollision(p1, p2) {
-
+  if (!p1 || !p2) return;
   if (!p1.alive || !p2.alive) return;
 
   const dx = p2.x - p1.x;

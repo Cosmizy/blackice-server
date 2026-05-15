@@ -570,7 +570,7 @@ function spinnerKills(p, spin){
 
   const worldAngle = Math.atan2(dy, dx);
 
-  const seg = (Math.PI * 2) / CENTER_SPINNER_ARMS;
+  const seg = (Math.PI * 2) / room.spinnerArms;
 
   const armIndex = Math.round((worldAngle - spin) / seg);
 

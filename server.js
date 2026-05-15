@@ -155,11 +155,19 @@ function regenSpikes() {
   }
 }
 
-function tri(x1,y1,x2,y2,x3,y3){
+function tri(x1, y1, x2, y2, x3, y3) {
   return {
-    a:{x:x1,y:y1},
-    b:{x:x2,y:y2},
-    c:{x:x3,y:y3}
+    a: { x: x1, y: y1 },
+    b: { x: x2, y: y2 },
+    c: { x: x3, y: y3 },
+
+    // NEW: rectangular hitbox (bounding box)
+    hitbox: {
+      x: Math.min(x1, x2, x3),
+      y: Math.min(y1, y2, y3),
+      w: Math.max(x1, x2, x3) - Math.min(x1, x2, x3),
+      h: Math.max(y1, y2, y3) - Math.min(y1, y2, y3)
+    }
   };
 }
 

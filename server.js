@@ -598,16 +598,36 @@ function killPlayer(p){
   p.respawnTimer = 2;
 }
 
-function respawnPlayer(p){
+function respawnPlayer(p) {
+  if (!p) return; // 🔥 critical safety
 
   p.alive = true;
-
-  p.x = Math.random() * 1200 + 300;
-  p.y = Math.random() * 600 + 200;
+  p.color = pickUniqueColor(rooms[p.roomName]);
+  p.respawnTimer = 0;
 
   p.vx = 0;
   p.vy = 0;
-  p.color = pickUniqueColor(rooms[p.roomName]);
+  p.ax = 0;
+  p.ay = 0;
+
+  let safe = false;
+
+  while (!safe) {
+    const x = Math.random() * 1200 + 300;
+    const y = Math.random() * 600 + 200;
+
+    const dx = x - WORLD_WIDTH / 2;
+    const dy = y - WORLD_HEIGHT / 2;
+
+    if (Math.hypot(dx, dy) > 220) {
+      p.x = x;
+      p.y = y;
+      safe = true;
+    }
+  }
+
+  p.attackTimer = 0;
+  p.attackActiveTimer = 0;
 }
 
 setInterval(updateRooms, 1000 / 60);

@@ -330,7 +330,7 @@ function updateRooms() {
 
       if (!p.alive) continue;
 
-      if (spikesKill(p) || spinnerKills(p, room.spinnerAngle)) {
+      if (spikesKill(p) || spinnerKills(p, room.spinnerAngle, room.spinnerArms)) {
         killPlayer(p);
       }
     }

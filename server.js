@@ -79,6 +79,23 @@ const rooms = {
   room3: createRoom()
 };
 
+function pickUniqueColor(room) {
+  const used = new Set();
+
+  for (const id in room.players) {
+    used.add(room.players[id].color);
+  }
+
+  const available = COLORS.filter(c => !used.has(c));
+
+  // if all colors are taken, fallback to random (reuse allowed)
+  if (available.length === 0) {
+    return COLORS[Math.floor(Math.random() * COLORS.length)];
+  }
+
+  return available[Math.floor(Math.random() * available.length)];
+}
+
 function createRoom() {
   return {
     players: {},

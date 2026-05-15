@@ -1,98 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Black Ice Multiplayer</title>
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
-<style>
+const app = express();
+const server = http.createServer(app);
 
-html,body{
-margin:0;
-overflow:hidden;
-background:#e9f5ff;
-}
-
-canvas{
-display:block;
-width:100vw;
-height:100vh;
-background:radial-gradient(
-1200px 800px at center,
-#f7fbff 0%,
-#e9f5ff 55%,
-#dff0ff 100%
-);
-}
-
-#menu{
-position:fixed;
-top:20px;
-left:20px;
-z-index:100;
-}
-
-button{
-padding:10px 18px;
-margin-right:10px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-font-size:16px;
-}
-
-#status{
-position:fixed;
-top:20px;
-right:20px;
-background:white;
-padding:10px;
-border-radius:10px;
-font-family:sans-serif;
-}
-
-</style>
-</head>
-<body>
-
-<div id="menu">
-<button onclick="joinRoom('room1')">Room 1</button>
-<button onclick="joinRoom('room2')">Room 2</button>
-<button onclick="joinRoom('room3')">Room 3</button>
-</div>
-
-<div id="status">Disconnected</div>
-
-<canvas id="game"></canvas>
-
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
-<script>
-
-const SERVER_URL = "YOUR_RENDER_URL";
-
-const socket = io(SERVER_URL);
-
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-
-const statusEl = document.getElementById("status");
-
-let W = window.innerWidth;
-let H = window.innerHeight;
-
-canvas.width = W;
-canvas.height = H;
-
-window.addEventListener("resize", () => {
-
-W = window.innerWidth;
-H = window.innerHeight;
-
-canvas.width = W;
-canvas.height = H;
-
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
 });
+
+const PORT = process.env.PORT || 3000;
+
+const MAX_PLAYERS = 6;
 
 const WORLD_WIDTH = 1920;
 const WORLD_HEIGHT = 1080;
@@ -109,432 +30,536 @@ const CENTER_BLADE_HALF = 12;
 const SPINNER_SPIKE_LENGTH = 42;
 const SPINNER_SPIKE_WIDTH = 28;
 
+const SPIN_SPEED = 1.7;
+
+const ACCEL = 2200;
+const MAX_SPEED = 900;
+const FRICTION = 0.92;
+
+const PLAYER_SIZE = 28;
+
 const ATTACK_RANGE = 54;
 const ATTACK_ARC = Math.PI / 2.2;
+const ATTACK_COOLDOWN = 0.45;
+const ATTACK_ACTIVE = 0.14;
 
-let myId = null;
+const KNOCKBACK = 520;
 
-let currentRoom = null;
-
-let spinnerAngle = 0;
-
-let players = {};
-
-const keys = {};
+const COLORS = [
+  "#111111",
+  "#ff4444",
+  "#4488ff",
+  "#44cc44",
+  "#ffcc00",
+  "#aa44ff"
+];
 
 const spikes = [];
 
 regenSpikes();
 
-window.addEventListener("keydown", e => {
+const rooms = {
+  room1: createRoom(),
+  room2: createRoom(),
+  room3: createRoom()
+};
 
-keys[e.code] = true;
-
-if([
-"ArrowUp",
-"ArrowDown",
-"ArrowLeft",
-"ArrowRight",
-"Space"
-].includes(e.code)){
-e.preventDefault();
+function createRoom() {
+  return {
+    players: {},
+    spinnerAngle: 0
+  };
 }
 
-});
+function regenSpikes() {
+  spikes.length = 0;
 
-window.addEventListener("keyup", e => {
-keys[e.code] = false;
-});
+  let x = WALL_THICK;
 
-function joinRoom(room){
+  while (x + SPIKE_GAP <= WORLD_WIDTH - WALL_THICK) {
+    spikes.push(tri(
+      x,
+      WALL_THICK,
+      x + SPIKE_GAP / 2,
+      WALL_THICK + SPIKE_DEPTH,
+      x + SPIKE_GAP,
+      WALL_THICK
+    ));
 
-currentRoom = room;
+    spikes.push(tri(
+      x,
+      WORLD_HEIGHT - WALL_THICK,
+      x + SPIKE_GAP / 2,
+      WORLD_HEIGHT - WALL_THICK - SPIKE_DEPTH,
+      x + SPIKE_GAP,
+      WORLD_HEIGHT - WALL_THICK
+    ));
 
-socket.emit("joinRoom", room);
+    x += SPIKE_GAP;
+  }
 
-}
+  let y = WALL_THICK;
 
-socket.on("connect", () => {
+  while (y + SPIKE_GAP <= WORLD_HEIGHT - WALL_THICK) {
+    spikes.push(tri(
+      WALL_THICK,
+      y,
+      WALL_THICK + SPIKE_DEPTH,
+      y + SPIKE_GAP / 2,
+      WALL_THICK,
+      y + SPIKE_GAP
+    ));
 
-myId = socket.id;
+    spikes.push(tri(
+      WORLD_WIDTH - WALL_THICK,
+      y,
+      WORLD_WIDTH - WALL_THICK - SPIKE_DEPTH,
+      y + SPIKE_GAP / 2,
+      WORLD_WIDTH - WALL_THICK,
+      y + SPIKE_GAP
+    ));
 
-statusEl.innerText = "Connected";
-
-});
-
-socket.on("disconnect", () => {
-
-statusEl.innerText = "Disconnected";
-
-});
-
-socket.on("roomFull", () => {
-alert("Room full");
-});
-
-socket.on("state", state => {
-
-players = state.players;
-
-spinnerAngle = state.spinnerAngle;
-
-});
-
-function updateInput(){
-
-if(!currentRoom) return;
-
-socket.emit("input",{
-
-up: keys["KeyW"] || keys["ArrowUp"],
-down: keys["KeyS"] || keys["ArrowDown"],
-left: keys["KeyA"] || keys["ArrowLeft"],
-right: keys["KeyD"] || keys["ArrowRight"],
-
-attack: keys["Space"]
-
-});
-
-}
-
-setInterval(updateInput,1000/60);
-
-function worldToScreen(x,y){
-
-const sx = (x / WORLD_WIDTH) * W;
-const sy = (y / WORLD_HEIGHT) * H;
-
-return {x:sx,y:sy};
-
-}
-
-function regenSpikes(){
-
-spikes.length = 0;
-
-let x = WALL_THICK;
-
-while(x + SPIKE_GAP <= WORLD_WIDTH - WALL_THICK){
-
-spikes.push(tri(
-x,
-WALL_THICK,
-x + SPIKE_GAP/2,
-WALL_THICK + SPIKE_DEPTH,
-x + SPIKE_GAP,
-WALL_THICK
-));
-
-spikes.push(tri(
-x,
-WORLD_HEIGHT - WALL_THICK,
-x + SPIKE_GAP/2,
-WORLD_HEIGHT - WALL_THICK - SPIKE_DEPTH,
-x + SPIKE_GAP,
-WORLD_HEIGHT - WALL_THICK
-));
-
-x += SPIKE_GAP;
-}
-
-let y = WALL_THICK;
-
-while(y + SPIKE_GAP <= WORLD_HEIGHT - WALL_THICK){
-
-spikes.push(tri(
-WALL_THICK,
-y,
-WALL_THICK + SPIKE_DEPTH,
-y + SPIKE_GAP/2,
-WALL_THICK,
-y + SPIKE_GAP
-));
-
-spikes.push(tri(
-WORLD_WIDTH - WALL_THICK,
-y,
-WORLD_WIDTH - WALL_THICK - SPIKE_DEPTH,
-y + SPIKE_GAP/2,
-WORLD_WIDTH - WALL_THICK,
-y + SPIKE_GAP
-));
-
-y += SPIKE_GAP;
-}
+    y += SPIKE_GAP;
+  }
 }
 
 function tri(x1,y1,x2,y2,x3,y3){
-
-return{
-a:{x:x1,y:y1},
-b:{x:x2,y:y2},
-c:{x:x3,y:y3}
-};
-
+  return {
+    a:{x:x1,y:y1},
+    b:{x:x2,y:y2},
+    c:{x:x3,y:y3}
+  };
 }
 
-function drawWalls(){
+io.on("connection", socket => {
 
-ctx.fillStyle = "#0b0b0b";
+  socket.room = null;
 
-const tX = (WALL_THICK / WORLD_WIDTH) * W;
-const tY = (WALL_THICK / WORLD_HEIGHT) * H;
+  socket.on("joinRoom", roomName => {
 
-ctx.fillRect(0,0,W,tY);
-ctx.fillRect(0,H-tY,W,tY);
+    const room = rooms[roomName];
 
-ctx.fillRect(0,0,tX,H);
-ctx.fillRect(W-tX,0,tX,H);
+    if (!room) return;
 
+    const count = Object.keys(room.players).length;
+
+    if (count >= MAX_PLAYERS) {
+      socket.emit("roomFull");
+      return;
+    }
+
+    if (socket.room) {
+      leaveRoom(socket);
+    }
+
+    socket.join(roomName);
+
+    socket.room = roomName;
+
+    room.players[socket.id] = {
+      id: socket.id,
+
+      x: Math.random() * 1200 + 300,
+      y: Math.random() * 600 + 200,
+
+      vx: 0,
+      vy: 0,
+
+      ax: 0,
+      ay: 0,
+
+      facing: 0,
+
+      size: PLAYER_SIZE,
+
+      attackTimer: 0,
+      attackActiveTimer: 0,
+
+      alive: true,
+      respawnTimer: 0,
+
+      score: 0,
+
+      input: {},
+
+      color: COLORS[count % COLORS.length]
+    };
+  });
+
+  socket.on("input", input => {
+
+    const roomName = socket.room;
+
+    if (!roomName) return;
+
+    const room = rooms[roomName];
+
+    const player = room.players[socket.id];
+
+    if (!player) return;
+
+    player.input = input;
+  });
+
+  socket.on("disconnect", () => {
+    leaveRoom(socket);
+  });
+});
+
+function leaveRoom(socket) {
+
+  const roomName = socket.room;
+
+  if (!roomName) return;
+
+  const room = rooms[roomName];
+
+  delete room.players[socket.id];
+
+  socket.leave(roomName);
 }
 
-function drawSpikes(){
+function updateRooms() {
 
-ctx.fillStyle = "#0b0b0b";
+  const dt = 1 / 60;
 
-for(const t of spikes){
+  for (const roomName in rooms) {
 
-const a = worldToScreen(t.a.x,t.a.y);
-const b = worldToScreen(t.b.x,t.b.y);
-const c = worldToScreen(t.c.x,t.c.y);
+    const room = rooms[roomName];
 
-ctx.beginPath();
+    room.spinnerAngle += SPIN_SPEED * dt;
 
-ctx.moveTo(a.x,a.y);
-ctx.lineTo(b.x,b.y);
-ctx.lineTo(c.x,c.y);
+    const playerList = Object.values(room.players);
 
-ctx.closePath();
+    for (const p of playerList) {
 
-ctx.fill();
-}
-}
+      if (!p.alive) {
 
-function drawSpinner(){
+        p.respawnTimer -= dt;
 
-const center = worldToScreen(
-WORLD_WIDTH/2,
-WORLD_HEIGHT/2
-);
+        if (p.respawnTimer <= 0) {
+          respawnPlayer(p);
+        }
 
-ctx.save();
+        continue;
+      }
 
-ctx.translate(1920/2, 1080/2);
+      handleInput(p, dt);
 
-ctx.rotate(spinnerAngle);
+      p.vx += p.ax * dt;
+      p.vy += p.ay * dt;
 
-ctx.fillStyle = "#0b0b0b";
+      const speed = Math.hypot(p.vx, p.vy);
 
-for(let i=0;i<CENTER_SPINNER_ARMS;i++){
+      if (speed > MAX_SPEED) {
 
-ctx.rotate((Math.PI*2)/CENTER_SPINNER_ARMS);
+        const scale = MAX_SPEED / speed;
 
-const inner =
-(CENTER_SPINNER_INNER / WORLD_WIDTH) * W;
+        p.vx *= scale;
+        p.vy *= scale;
+      }
 
-const outer =
-(CENTER_SPINNER_OUTER / WORLD_WIDTH) * W;
+      p.vx *= FRICTION;
+      p.vy *= FRICTION;
 
-const half =
-(CENTER_BLADE_HALF / WORLD_HEIGHT) * H;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
 
-ctx.beginPath();
+      keepInside(p);
 
-ctx.moveTo(inner,-half);
-ctx.lineTo(outer,-half);
-ctx.lineTo(outer,half);
-ctx.lineTo(inner,half);
+      p.attackTimer = Math.max(0, p.attackTimer - dt);
+      p.attackActiveTimer = Math.max(0, p.attackActiveTimer - dt);
+    }
 
-ctx.closePath();
+    for (let i = 0; i < playerList.length; i++) {
+      for (let j = i + 1; j < playerList.length; j++) {
+        resolvePlayerCollision(playerList[i], playerList[j]);
+      }
+    }
 
-ctx.fill();
+    resolveAttacks(playerList);
 
-const spikeWidth =
-(SPINNER_SPIKE_WIDTH / WORLD_WIDTH) * W;
+    for (const p of playerList) {
 
-const spikeLength =
-(SPINNER_SPIKE_LENGTH / WORLD_HEIGHT) * H;
+      if (!p.alive) continue;
 
-const baseStart = outer - spikeWidth;
-const baseEnd = outer;
+      if (spikesKill(p) || spinnerKills(p, room.spinnerAngle)) {
+        killPlayer(p);
+      }
+    }
 
-ctx.beginPath();
-
-ctx.moveTo(baseStart,half);
-ctx.lineTo(baseEnd,half);
-ctx.lineTo(
-(baseStart+baseEnd)/2,
-half + spikeLength
-);
-
-ctx.closePath();
-
-ctx.fill();
+    io.to(roomName).emit("state", {
+      players: room.players,
+      spinnerAngle: room.spinnerAngle
+    });
+  }
 }
 
-ctx.beginPath();
+function handleInput(p, dt) {
 
-ctx.arc(0,0,10,0,Math.PI*2);
+  const input = p.input || {};
 
-ctx.fill();
+  p.ax = 0;
+  p.ay = 0;
 
-ctx.restore();
+  let moved = false;
 
+  if (input.left) {
+    p.ax -= ACCEL;
+    moved = true;
+  }
+
+  if (input.right) {
+    p.ax += ACCEL;
+    moved = true;
+  }
+
+  if (input.up) {
+    p.ay -= ACCEL;
+    moved = true;
+  }
+
+  if (input.down) {
+    p.ay += ACCEL;
+    moved = true;
+  }
+
+  if (moved) {
+    p.facing = Math.atan2(p.ay, p.ax);
+  }
+
+  if (input.attack && p.attackTimer <= 0) {
+    p.attackTimer = ATTACK_COOLDOWN;
+    p.attackActiveTimer = ATTACK_ACTIVE;
+  }
 }
 
-function drawPlayers(){
+function keepInside(p) {
 
-for(const id in players){
+  const half = p.size / 2;
 
-const p = players[id];
+  const minX = WALL_THICK + half;
+  const maxX = WORLD_WIDTH - WALL_THICK - half;
 
-if(!p.alive) continue;
+  const minY = WALL_THICK + half;
+  const maxY = WORLD_HEIGHT - WALL_THICK - half;
 
-const pos = worldToScreen(p.x,p.y);
+  if (p.x < minX) {
+    p.x = minX;
+    p.vx = Math.abs(p.vx);
+  }
 
-const size = (p.size / WORLD_WIDTH) * W;
+  if (p.x > maxX) {
+    p.x = maxX;
+    p.vx = -Math.abs(p.vx);
+  }
 
-ctx.save();
+  if (p.y < minY) {
+    p.y = minY;
+    p.vy = Math.abs(p.vy);
+  }
 
-ctx.globalAlpha = 0.12;
-
-ctx.fillStyle = "#000";
-
-ctx.fillRect(
-pos.x - size/2 + 3,
-pos.y - size/2 + 5,
-size,
-size
-);
-
-ctx.globalAlpha = 1;
-
-ctx.fillStyle = p.color;
-
-ctx.fillRect(
-pos.x - size/2,
-pos.y - size/2,
-size,
-size
-);
-
-const nx = Math.cos(p.facing);
-const ny = Math.sin(p.facing);
-
-ctx.fillStyle = "white";
-
-ctx.fillRect(
-pos.x + nx*(size/2) - 2,
-pos.y + ny*(size/2) - 2,
-4,
-4
-);
-
-if(p.attackActiveTimer > 0){
-
-ctx.save();
-
-ctx.translate(pos.x,pos.y);
-
-ctx.rotate(p.facing);
-
-ctx.globalAlpha = 0.2;
-
-ctx.beginPath();
-
-ctx.moveTo(0,0);
-
-ctx.arc(
-0,
-0,
-(ATTACK_RANGE / WORLD_WIDTH) * W,
--ATTACK_ARC/2,
-ATTACK_ARC/2
-);
-
-ctx.closePath();
-
-ctx.fill();
-
-ctx.restore();
+  if (p.y > maxY) {
+    p.y = maxY;
+    p.vy = -Math.abs(p.vy);
+  }
 }
 
-if(id === myId){
+function resolvePlayerCollision(p1, p2) {
 
-ctx.strokeStyle = "white";
+  if (!p1.alive || !p2.alive) return;
 
-ctx.lineWidth = 3;
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
 
-ctx.strokeRect(
-pos.x - size/2 - 3,
-pos.y - size/2 - 3,
-size + 6,
-size + 6
-);
+  const dist = Math.hypot(dx, dy);
+
+  const minDist = p1.size;
+
+  if (dist < minDist && dist > 0) {
+
+    const nx = dx / dist;
+    const ny = dy / dist;
+
+    const overlap = (minDist - dist) / 2;
+
+    p1.x -= nx * overlap;
+    p1.y -= ny * overlap;
+
+    p2.x += nx * overlap;
+    p2.y += ny * overlap;
+
+    const rvx = p2.vx - p1.vx;
+    const rvy = p2.vy - p1.vy;
+
+    const velAlongNormal = rvx * nx + rvy * ny;
+
+    if (velAlongNormal < 0) {
+
+      const restitution = 0.9;
+
+      const impulse = -(1 + restitution) * velAlongNormal / 2;
+
+      const ix = impulse * nx;
+      const iy = impulse * ny;
+
+      p1.vx -= ix;
+      p1.vy -= iy;
+
+      p2.vx += ix;
+      p2.vy += iy;
+    }
+  }
 }
 
-ctx.restore();
-}
-}
+function resolveAttacks(players) {
 
-function drawIceSheen(){
+  for (const attacker of players) {
 
-const t = performance.now() * 0.001;
+    if (!attacker.alive) continue;
 
-for(let i=0;i<3;i++){
+    if (attacker.attackActiveTimer <= 0) continue;
 
-const y = (H/3)*i + ((t*40+i*80)%(H/3));
+    for (const defender of players) {
 
-const grad = ctx.createLinearGradient(
-0,y,W,y+80
-);
+      if (attacker.id === defender.id) continue;
 
-grad.addColorStop(0,"rgba(255,255,255,0)");
-grad.addColorStop(0.5,"rgba(255,255,255,0.08)");
-grad.addColorStop(1,"rgba(255,255,255,0)");
+      if (!defender.alive) continue;
 
-ctx.fillStyle = grad;
+      const dx = defender.x - attacker.x;
+      const dy = defender.y - attacker.y;
 
-ctx.fillRect(0,y,W,80);
-}
-}
+      const dist = Math.hypot(dx, dy);
 
-function render() {
-  ctx.clearRect(0,0,W,H);
+      if (dist > ATTACK_RANGE + defender.size * 0.6) continue;
 
-  // ===== WORLD SIZE =====
-  const WORLD_W = 1920;
-  const WORLD_H = 1080;
+      const ang = Math.atan2(dy, dx);
 
-  // scale arena to fit screen
-  const scale = Math.min(W / WORLD_W, H / WORLD_H);
+      let delta = ang - attacker.facing;
 
-  // center arena
-  const offsetX = (W - WORLD_W * scale) / 2;
-  const offsetY = (H - WORLD_H * scale) / 2;
+      while (delta > Math.PI) delta -= Math.PI * 2;
+      while (delta < -Math.PI) delta += Math.PI * 2;
 
-  ctx.save();
+      if (Math.abs(delta) <= ATTACK_ARC / 2) {
 
-  ctx.translate(offsetX, offsetY);
-  ctx.scale(scale, scale);
+        const nx = Math.cos(attacker.facing);
+        const ny = Math.sin(attacker.facing);
 
-  // ===== BACKGROUND =====
-  ctx.fillStyle = "#e9f5ff";
-  ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+        defender.vx += nx * KNOCKBACK;
+        defender.vy += ny * KNOCKBACK;
 
-  // ===== SPINNER =====
-  drawSpinner();
-
-  // ===== PLAYERS =====
-  drawPlayers();
-
-  ctx.restore();
-
-  requestAnimationFrame(render);
+        attacker.attackActiveTimer = 0;
+      }
+    }
+  }
 }
 
-render();
+function pointInTri(px, py, t){
 
-</script>
-</body>
-</html>
+  const {a,b,c} = t;
+
+  const v0x = c.x - a.x;
+  const v0y = c.y - a.y;
+
+  const v1x = b.x - a.x;
+  const v1y = b.y - a.y;
+
+  const v2x = px - a.x;
+  const v2y = py - a.y;
+
+  const dot00 = v0x*v0x + v0y*v0y;
+  const dot01 = v0x*v1x + v0y*v1y;
+  const dot02 = v0x*v2x + v0y*v2y;
+  const dot11 = v1x*v1x + v1y*v1y;
+  const dot12 = v1x*v2x + v1y*v2y;
+
+  const invDen = 1 / (dot00 * dot11 - dot01 * dot01 + 1e-9);
+
+  const u = (dot11 * dot02 - dot01 * dot12) * invDen;
+  const v = (dot00 * dot12 - dot01 * dot02) * invDen;
+
+  return u >= 0 && v >= 0 && (u + v < 1);
+}
+
+function spikesKill(p){
+
+  for (const t of spikes) {
+
+    if (pointInTri(p.x, p.y, t)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function spinnerKills(p, spin){
+
+  const dx = p.x - WORLD_WIDTH / 2;
+  const dy = p.y - WORLD_HEIGHT / 2;
+
+  const worldAngle = Math.atan2(dy, dx);
+
+  const seg = (Math.PI * 2) / CENTER_SPINNER_ARMS;
+
+  const armIndex = Math.round((worldAngle - spin) / seg);
+
+  const armAngle = spin + armIndex * seg;
+
+  const ca = Math.cos(-armAngle);
+  const sa = Math.sin(-armAngle);
+
+  const localX = dx * ca - dy * sa;
+  const localY = dx * sa + dy * ca;
+
+  const baseStart = CENTER_SPINNER_OUTER - SPINNER_SPIKE_WIDTH;
+  const baseEnd = CENTER_SPINNER_OUTER;
+
+  const tipX = (baseStart + baseEnd) / 2;
+  const tipY = CENTER_BLADE_HALF + SPINNER_SPIKE_LENGTH;
+
+  const r = p.size * 0.45;
+
+  const tri = {
+    a: {
+      x: baseStart - r,
+      y: CENTER_BLADE_HALF - r
+    },
+
+    b: {
+      x: baseEnd + r,
+      y: CENTER_BLADE_HALF - r
+    },
+
+    c: {
+      x: tipX,
+      y: tipY + r
+    }
+  };
+
+  return pointInTri(localX, localY, tri);
+}
+
+function killPlayer(p){
+
+  p.alive = false;
+
+  p.respawnTimer = 2;
+}
+
+function respawnPlayer(p){
+
+  p.alive = true;
+
+  p.x = Math.random() * 1200 + 300;
+  p.y = Math.random() * 600 + 200;
+
+  p.vx = 0;
+  p.vy = 0;
+}
+
+setInterval(updateRooms, 1000 / 60);
+
+server.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
+});

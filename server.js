@@ -538,9 +538,16 @@ function pointInTri(px, py, t){
   return u >= 0 && v >= 0 && (u + v < 1);
 }
 
-function spikesKill(p){
-  for (const t of spikes) {
-    if (pointInTri(p.x, p.y, t)) {
+function spikesKill(p) {
+  for (const s of spikes) {
+    const h = s.hitbox;
+
+    if (
+      p.x > h.x &&
+      p.x < h.x + h.w &&
+      p.y > h.y &&
+      p.y < h.y + h.h
+    ) {
       return true;
     }
   }

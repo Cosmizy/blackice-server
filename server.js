@@ -346,7 +346,7 @@ function updateRooms() {
 
       if (speed > MAX_SPEED) {
 
-        const scale = MAX_SPEED / speed;
+        const scale = cfg.MAX_SPEED / speed;
 
         p.vx *= scale;
         p.vy *= scale;

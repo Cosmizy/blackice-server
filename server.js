@@ -342,10 +342,11 @@ function updateRooms() {
       p.vy += p.ay * dt;
 
       const speed = Math.hypot(p.vx, p.vy);
+      const max = room.config.MAX_SPEED;
+      
+      if (speed > max) {
 
-      if (speed > MAX_SPEED) {
-
-        const scale = cfg.MAX_SPEED / speed;
+        const scale = max / speed;
 
         p.vx *= scale;
         p.vy *= scale;

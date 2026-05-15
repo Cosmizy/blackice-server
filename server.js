@@ -96,10 +96,18 @@ function pickUniqueColor(room) {
   return available[Math.floor(Math.random() * available.length)];
 }
 
-function createRoom() {
+function createRoom(name) {
+  const spinnerArmsByRoom = {
+    room1: 3,
+    room2: 4,
+    room3: 8
+  };
+
   return {
+    name,
     players: {},
-    spinnerAngle: 0
+    spinnerAngle: 0,
+    spinnerArms: spinnerArmsByRoom[name] ?? 4
   };
 }
 

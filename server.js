@@ -268,7 +268,7 @@ io.on("connection", socket => {
     ax: 0,
     ay: 0,
     facing: 0,
-    size: PLAYER_SIZE,
+    size: rooms[roomName].config.PLAYER_SIZE,
     attackTimer: 0,
     attackActiveTimer: 0,
     alive: true,

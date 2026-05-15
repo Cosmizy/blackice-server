@@ -132,7 +132,9 @@ function tri(x1,y1,x2,y2,x3,y3){
 }
 
 io.on("connection", socket => {
-
+  const JOIN_COOLDOWN = 1500; // ms (1.5 seconds)
+  socket.lastJoinTime = 0;
+  
   socket.room = null;
 
   socket.on("joinRoom", roomName => {

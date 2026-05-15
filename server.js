@@ -425,7 +425,7 @@ function handleInput(p, dt) {
   }
 
   if (input.attack && p.attackTimer <= 0) {
-    p.attackTimer = ATTACK_COOLDOWN;
+    p.attackTimer = room.config.ATTACK_COOLDOWN;
     p.attackActiveTimer = ATTACK_ACTIVE;
   }
 }

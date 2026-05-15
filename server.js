@@ -190,6 +190,8 @@ io.on("connection", socket => {
   const room = rooms[roomName];
   if (!room) return;
 
+  if (socket.room === roomName) return;
+
   const count = Object.keys(room.players).length;
 
   if (count >= MAX_PLAYERS) {

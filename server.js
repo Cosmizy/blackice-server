@@ -32,7 +32,7 @@ const SPINNER_SPIKE_WIDTH = 28;
 
 const SPIN_SPEED = 1.7;
 
-const ACCEL = 2200;
+const ACCEL = 1000;
 const MAX_SPEED = 900;
 const FRICTION = 0.99;
 

@@ -617,7 +617,7 @@ function spinnerKills(p, spin){
   const baseEnd = CENTER_SPINNER_OUTER;
 
   const tipX = (baseStart + baseEnd) / 2;
-  const tipY = CENTER_BLADE_HALF + SPINNER_SPIKE_LENGTH;
+  const tipY = CENTER_BLADE_HALF + room.config.SPINNER_SPIKE_LENGTH;
 
   const r = p.size * 0.45;
 

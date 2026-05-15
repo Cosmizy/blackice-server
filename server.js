@@ -613,8 +613,8 @@ function spinnerKills(p, spin){
   const localX = dx * ca - dy * sa;
   const localY = dx * sa + dy * ca;
 
-  const baseStart = CENTER_SPINNER_OUTER - SPINNER_SPIKE_WIDTH;
-  const baseEnd = CENTER_SPINNER_OUTER;
+  const baseStart = room.config.CENTER_SPINNER_OUTER - room.config.SPINNER_SPIKE_WIDTH;
+  const baseEnd = room.config.CENTER_SPINNER_OUTER;
 
   const tipX = (baseStart + baseEnd) / 2;
   const tipY = CENTER_BLADE_HALF + room.config.SPINNER_SPIKE_LENGTH;

@@ -13,56 +13,6 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-const ROOM_CONFIGS = {
-  room1: {
-    MAX_PLAYERS: 6,
-    ACCEL: 1000,
-    MAX_SPEED: 900,
-    FRICTION: 0.99,
-    ATTACK_COOLDOWN: 0.45,
-    ATTACK_RANGE: 80,
-    PLAYER_SIZE: 40,
-    CENTER_SPINNER_ARMS: 4,
-    CENTER_SPINNER_INNER: 30,
-    CENTER_SPINNER_OUTER: 150,
-    SPINNER_SPIKE_LENGTH: 42,
-    SPINNER_SPIKE_WIDTH: 28,
-    SPIN_SPEED: 1.7,
-  },
-
-  room2: {
-    MAX_PLAYERS: 6,
-    ACCEL: 1000,
-    MAX_SPEED: 900,
-    FRICTION: 0.99,
-    ATTACK_COOLDOWN: 0.45,
-    ATTACK_RANGE: 80,
-    PLAYER_SIZE: 40,
-    CENTER_SPINNER_ARMS: 4,
-    CENTER_SPINNER_INNER: 30,
-    CENTER_SPINNER_OUTER: 150,
-    SPINNER_SPIKE_LENGTH: 42,
-    SPINNER_SPIKE_WIDTH: 28,
-    SPIN_SPEED: 1.7,
-  },
-
-  room3: {
-    MAX_PLAYERS: 6,
-    ACCEL: 1000,
-    MAX_SPEED: 900,
-    FRICTION: 0.99,
-    ATTACK_COOLDOWN: 0.45,
-    ATTACK_RANGE: 80,
-    PLAYER_SIZE: 40,
-    CENTER_SPINNER_ARMS: 4,
-    CENTER_SPINNER_INNER: 30,
-    CENTER_SPINNER_OUTER: 150,
-    SPINNER_SPIKE_LENGTH: 42,
-    SPINNER_SPIKE_WIDTH: 28,
-    SPIN_SPEED: 1.7,
-  }
-};
-
 const MAX_PLAYERS = 6;
 
 const WORLD_WIDTH = 1920;
@@ -124,9 +74,9 @@ const spikes = [];
 regenSpikes();
 
 const rooms = {
-  room1: createRoom("room1"),
-  room2: createRoom("room2"),
-  room3: createRoom("room3")
+  room1: createRoom(),
+  room2: createRoom(),
+  room3: createRoom()
 };
 
 function pickUniqueColor(room) {
@@ -146,11 +96,10 @@ function pickUniqueColor(room) {
   return available[Math.floor(Math.random() * available.length)];
 }
 
-function createRoom(roomName) {
+function createRoom() {
   return {
     players: {},
-    spinnerAngle: 0,
-    config: ROOM_CONFIGS[roomName]
+    spinnerAngle: 0
   };
 }
 
@@ -241,11 +190,9 @@ io.on("connection", socket => {
   const room = rooms[roomName];
   if (!room) return;
 
-  if (socket.room === roomName) return;
-
   const count = Object.keys(room.players).length;
 
-  if (count >= room.config.MAX_PLAYERS) {
+  if (count >= MAX_PLAYERS) {
     socket.emit("roomFull");
     return;
   }
@@ -267,7 +214,7 @@ io.on("connection", socket => {
     ax: 0,
     ay: 0,
     facing: 0,
-    size: room.config.PLAYER_SIZE,
+    size: PLAYER_SIZE,
     attackTimer: 0,
     attackActiveTimer: 0,
     alive: true,
@@ -319,7 +266,7 @@ function updateRooms() {
 
     const room = rooms[roomName];
 
-    room.spinnerAngle += room.config.SPIN_SPEED * dt;
+    room.spinnerAngle += SPIN_SPEED * dt;
 
     const playerList = Object.values(room.players).filter(Boolean);
 
@@ -342,18 +289,17 @@ function updateRooms() {
       p.vy += p.ay * dt;
 
       const speed = Math.hypot(p.vx, p.vy);
-      const max = room.config.MAX_SPEED;
-      
-      if (speed > max) {
 
-        const scale = max / speed;
+      if (speed > MAX_SPEED) {
+
+        const scale = MAX_SPEED / speed;
 
         p.vx *= scale;
         p.vy *= scale;
       }
 
-      p.vx *= room.config.FRICTION;
-      p.vy *= room.config.FRICTION;
+      p.vx *= FRICTION;
+      p.vy *= FRICTION;
 
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -370,13 +316,13 @@ function updateRooms() {
       }
     }
 
-    resolveAttacks(playerList, room);
+    resolveAttacks(playerList);
 
     for (const p of playerList) {
 
       if (!p.alive) continue;
 
-      if (spikesKill(p) || spinnerKills(p, room.spinnerAngle, room)) {
+      if (spikesKill(p) || spinnerKills(p, room.spinnerAngle)) {
         killPlayer(p);
       }
     }
@@ -404,11 +350,10 @@ io.to(roomName).emit("state", {
   }
 }
 
-function handleInput(p, dt, room) {
+function handleInput(p, dt) {
   if (!p || !p.alive) return;
 
   const input = p.input || {};
-  const cfg = room.config;
 
   p.ax = 0;
   p.ay = 0;
@@ -416,22 +361,22 @@ function handleInput(p, dt, room) {
   let moved = false;
 
   if (input.left) {
-    p.ax -= cfg.ACCEL;
+    p.ax -= ACCEL;
     moved = true;
   }
 
   if (input.right) {
-    p.ax += cfg.ACCEL;
+    p.ax += ACCEL;
     moved = true;
   }
 
   if (input.up) {
-    p.ay -= cfg.ACCEL;
+    p.ay -= ACCEL;
     moved = true;
   }
 
   if (input.down) {
-    p.ay += cfg.ACCEL;
+    p.ay += ACCEL;
     moved = true;
   }
 
@@ -440,7 +385,7 @@ function handleInput(p, dt, room) {
   }
 
   if (input.attack && p.attackTimer <= 0) {
-    p.attackTimer = cfg.ATTACK_COOLDOWN;
+    p.attackTimer = ATTACK_COOLDOWN;
     p.attackActiveTimer = ATTACK_ACTIVE;
   }
 }
@@ -524,8 +469,8 @@ function resolvePlayerCollision(p1, p2) {
   }
 }
 
-function resolveAttacks(players, room) {
-  const cfg = room.config;
+function resolveAttacks(players) {
+
   for (const attacker of players) {
 
     if (!attacker.alive) continue;
@@ -543,7 +488,7 @@ function resolveAttacks(players, room) {
 
       const dist = Math.hypot(dx, dy);
 
-      if (dist > cfg.ATTACK_RANGE + defender.size * 0.6) continue;
+      if (dist > ATTACK_RANGE + defender.size * 0.6) continue;
 
       const ang = Math.atan2(dy, dx);
 
@@ -609,15 +554,14 @@ function spikesKill(p) {
   return false;
 }
 
-function spinnerKills(p, spin, room){
-  const cfg = room.config;
-  
+function spinnerKills(p, spin){
+
   const dx = p.x - WORLD_WIDTH / 2;
   const dy = p.y - WORLD_HEIGHT / 2;
 
   const worldAngle = Math.atan2(dy, dx);
 
-  const seg = (Math.PI * 2) / cfg.CENTER_SPINNER_ARMS;
+  const seg = (Math.PI * 2) / CENTER_SPINNER_ARMS;
 
   const armIndex = Math.round((worldAngle - spin) / seg);
 
@@ -629,11 +573,11 @@ function spinnerKills(p, spin, room){
   const localX = dx * ca - dy * sa;
   const localY = dx * sa + dy * ca;
 
-  const baseStart = cfg.CENTER_SPINNER_OUTER - cfg.SPINNER_SPIKE_WIDTH;
-  const baseEnd = cfg.CENTER_SPINNER_OUTER;
+  const baseStart = CENTER_SPINNER_OUTER - SPINNER_SPIKE_WIDTH;
+  const baseEnd = CENTER_SPINNER_OUTER;
 
   const tipX = (baseStart + baseEnd) / 2;
-  const tipY = cfg.CENTER_BLADE_HALF + cfg.SPINNER_SPIKE_LENGTH;
+  const tipY = CENTER_BLADE_HALF + SPINNER_SPIKE_LENGTH;
 
   const r = p.size * 0.45;
 

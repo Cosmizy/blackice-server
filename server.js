@@ -195,6 +195,11 @@ io.on("connection", socket => {
     return; // silently ignore spam
   }
 
+  if bannedIds.has(socket.id)) {
+    socket.disconnect(true);
+    return;
+  }
+
   socket.lastJoinTime = now;
 
   const room = rooms[roomName];

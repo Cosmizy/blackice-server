@@ -268,6 +268,10 @@ io.on("connection", socket => {
 
   socket.on("disconnect", () => {
     leaveRoom(socket);
+
+    if (socket.deviceId) {
+      deviceToSocket.delete(socket.deviceId);
+    }
   });
 });
 

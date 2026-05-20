@@ -198,6 +198,12 @@ io.on("connection", socket => {
     return; // silently ignore spam
   }
 
+  socket.on("identify", (deviceId) => {
+    socket.deviceId = deviceId;
+  
+    deviceToSocket.set(deviceId, socket.id);
+  });
+
   if bannedIds.has(socket.id)) {
     socket.disconnect(true);
     return;

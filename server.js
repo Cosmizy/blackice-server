@@ -11,6 +11,8 @@ const io = new Server(server, {
   }
 });
 
+const bannedIds = new Set();
+
 const PORT = process.env.PORT || 3000;
 
 const MAX_PLAYERS = 6;

@@ -190,6 +190,10 @@ io.on("connection", socket => {
   
   socket.room = null;
 
+  socket.on("identify", (deviceId) => {
+    socket.deviceId = deviceId;
+  });
+  
   socket.on("joinRoom", roomName => {
   const now = Date.now();
 

@@ -11,6 +11,9 @@ const io = new Server(server, {
   }
 });
 
+const deviceToSocket = new Map();
+const deviceRoomCount = new Map();
+
 const bannedIds = new Set();
 
 const PORT = process.env.PORT || 3000;

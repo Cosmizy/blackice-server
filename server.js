@@ -619,6 +619,17 @@ function spinnerKills(p, spin, arms){
   return pointInTri(localX, localY, tri);
 }
 
+function banPlayer(socket, reason = "banned") {
+  const ip = socket.handshake.address;
+  
+  bannedIds.add(socket.id);
+
+  console.log(`Banned ${socket.id} - ${reason}`);
+
+  socket.emit("banned", reason);
+  socket.disconnect(true);
+}
+
 function killPlayer(p){
 
   p.alive = false;

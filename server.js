@@ -198,13 +198,7 @@ io.on("connection", socket => {
     return; // silently ignore spam
   }
 
-  socket.on("identify", (deviceId) => {
-    socket.deviceId = deviceId;
-  
-    deviceToSocket.set(deviceId, socket.id);
-  });
-
-  if bannedIds.has(socket.id)) {
+  if (bannedIds.has(socket.id)) {
     socket.disconnect(true);
     return;
   }
@@ -214,6 +208,13 @@ io.on("connection", socket => {
   const room = rooms[roomName];
   if (!room) return;
 
+  const existingRoom = deviceToRoom.get(deviceId);
+
+  if (existingRoom && existingRoom !== roomName) {
+    socket.emit("roomFull", "You are already in a room");
+    return;
+  }
+    
   if (socket.room === roomName) return;
     
   const count = Object.keys(room.players).length;
@@ -229,6 +230,8 @@ io.on("connection", socket => {
 
   socket.join(roomName);
   socket.room = roomName;
+
+  deviceToRoom.set(deviceId, roomName);
 
   room.players[socket.id] = {
     id: socket.id,

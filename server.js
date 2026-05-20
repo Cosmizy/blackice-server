@@ -275,6 +275,18 @@ function leaveRoom(socket) {
 
   const roomName = socket.room;
 
+  const deviceId = socket.deviceId;
+
+  if (deviceId) {
+    const current = deviceRoomCount.get(deviceId) || 0;
+  
+    if (current <= 1) {
+      deviceRoomCount.delete(deviceId);
+    } else {
+      deviceRoomCount.set(deviceId, current - 1);
+    }
+  }
+
   if (!roomName) return;
 
   const room = rooms[roomName];
